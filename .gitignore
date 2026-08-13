@@ -1,0 +1,18 @@
+# окружение
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# тяжёлые данные и модели (воспроизводимы из champions/*.log)
+data/*.npz
+benchmarks/.cache/
+*.pkl
+*.npz
+
+# логи прогонов (артефакты, в git не нужны — выводы идут в BENCHMARK_LOG.md)
+logs/
+
+# прочее
+.DS_Store
+*.egg-info/
