@@ -12,29 +12,30 @@
 - [x] Этот план `PLAN.md`
 - [x] `.gitignore` (venv, кэши данных, pkl, pycache)
 - [x] Первоначальный коммит (`c87cba8`)
+- [x] GitHub: репозиторий создан, remote + push (`https://github.com/belserv69/309I`, токен от OmniCore-EMS)
 
 ## M0 — порт ядра и smoke-тест (10 классов)
 
 Цель: доказать корректность порта. Точность прототипов заметно выше случайной (≥ 60%),
 без падений и NaN.
 
-- [ ] `data/rn50_2048.npz` — скопировать кэш RN50-признаков из CORAL
-- [ ] `zf/data.py` — загрузчик признаков по списку классов
-- [ ] `zf/memory/proto.py` — порт SOMA `PrototypicalMemory`:
-  - [ ] `never_update` (каждый семпл = замороженный прототип)
-  - [ ] `add_batch()` — O(N) добавление
-  - [ ] запрос per-class top-k через FAISS FlatIP + threshold-фильтр
-  - [ ] `_grow()` (авто-расширение ×1.5)
-  - [ ] exemplar ring (per-class FIFO)
-- [ ] `zf/pipeline.py` — CL-харнесс: фазы, train→eval, метрики (accuracy, per-class, forgetting)
-- [ ] `tests/test_memory.py`:
-  - [ ] `add_batch` ≡ последовательный `update` (режим never_update)
-  - [ ] прототипы L2-нормированы
-  - [ ] per-class top-k возвращает верный класс на синтетике
-  - [ ] `_grow` не теряет данные
-- [ ] `benchmarks/run_m0_10cls.py` — RN50, 10 классов, top-k=8, без аугментаций
-- [ ] Прогон + вердикт в `BENCHMARK_LOG.md`
-- [ ] Git-коммит
+- [x] `data/rn50_2048.npz` — скопировать кэш RN50-признаков из CORAL
+- [x] `zf/data.py` — загрузчик признаков по списку классов
+- [x] `zf/memory/proto.py` — порт SOMA `PrototypicalMemory`:
+  - [x] `never_update` (каждый семпл = замороженный прототип)
+  - [x] `add_batch()` — O(N) добавление
+  - [x] запрос per-class top-k через FAISS FlatIP + threshold-фильтр
+  - [x] `_grow()` (авто-расширение ×1.5)
+  - [x] exemplar ring (per-class FIFO)
+- [x] `zf/pipeline.py` — CL-харнесс: фазы, train→eval, метрики (accuracy, per-class, forgetting)
+- [x] `tests/test_memory.py`:
+  - [x] `add_batch` ≡ последовательный `update` (режим never_update)
+  - [x] прототипы L2-нормированы
+  - [x] per-class top-k возвращает верный класс на синтетике
+  - [x] `_grow` не теряет данные
+- [x] `benchmarks/run_m0_10cls.py` — RN50, 10 классов, top-k=8, без аугментаций
+- [x] Прогон + вердикт в `BENCHMARK_LOG.md` — **P@10cls = 95.67%** (цель ≥60%), 0.6 с, тесты 9/9
+- [x] Git-коммит
 
 **Definition of done:** P@10cls ≥ 60% (ориентир: CORAL proto-only = 64.1% на RN18 / 68.0% на RN50
 при 100 классах; на 10 классах должно быть выше), тесты зелёные, коммит есть.

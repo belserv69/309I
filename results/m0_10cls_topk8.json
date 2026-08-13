@@ -1,0 +1,64 @@
+{
+  "label": "m0_10cls_topk8",
+  "n_classes": 10,
+  "topk": 8,
+  "threshold": 0.0,
+  "exemplar_per_class": 0,
+  "p_last": 0.9566666666666667,
+  "avg_forgetting": 0.02592592592592592,
+  "cls0_forgetting": 0.1333333333333333,
+  "total_protos": 500,
+  "elapsed_s": 0.5820877552032471,
+  "phases": [
+    {
+      "phase": 0,
+      "accuracy": 1.0,
+      "protos": 50
+    },
+    {
+      "phase": 1,
+      "accuracy": 0.9333333333333333,
+      "protos": 100
+    },
+    {
+      "phase": 2,
+      "accuracy": 0.9333333333333332,
+      "protos": 150
+    },
+    {
+      "phase": 3,
+      "accuracy": 0.95,
+      "protos": 200
+    },
+    {
+      "phase": 4,
+      "accuracy": 0.9466666666666667,
+      "protos": 250
+    },
+    {
+      "phase": 5,
+      "accuracy": 0.9500000000000001,
+      "protos": 300
+    },
+    {
+      "phase": 6,
+      "accuracy": 0.9571428571428572,
+      "protos": 350
+    },
+    {
+      "phase": 7,
+      "accuracy": 0.9541666666666666,
+      "protos": 400
+    },
+    {
+      "phase": 8,
+      "accuracy": 0.9592592592592593,
+      "protos": 450
+    },
+    {
+      "phase": 9,
+      "accuracy": 0.9566666666666667,
+      "protos": 500
+    }
+  ]
+}
