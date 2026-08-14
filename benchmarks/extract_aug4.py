@@ -76,19 +76,44 @@ def main():
 
     enc = ResNetEncoder(backbone="rn50", batch_size=64)
 
-    t0 = time.time()
-    feats_train = enc.encode(x_aug)
-    print(f"Признаки train: {feats_train.shape} за {time.time()-t0:.1f}s")
+    # Промежуточный кэш: признаки сохраняются сразу после извлечения,
+    # ДО верификации/упаковки — чтобы сбой после 10-минутного кодирования
+    # не терял вычисления. Повторный запуск с тем же хэшем переиспользует его.
+    raw_cache = DATA / "_aug4_raw.npz"
+    if raw_cache.exists():
+        rc = np.load(raw_cache)
+        if str(rc["data_hash"]) == data_hash:
+            feats_train, feats_test = rc["feats_train"], rc["feats_test"]
+            print(f"Переиспользую сырой кэш: {raw_cache}")
+        else:
+            rc.close()
+            raw_cache.unlink()
+            feats_train = feats_test = None
+    else:
+        feats_train = feats_test = None
 
-    t0 = time.time()
-    feats_test = enc.encode(x_test)
-    print(f"Признаки test: {feats_test.shape} за {time.time()-t0:.1f}s")
+    if feats_train is None:
+        t0 = time.time()
+        feats_train = enc.encode(x_aug)
+        print(f"Признаки train: {feats_train.shape} за {time.time()-t0:.1f}s")
+
+        t0 = time.time()
+        feats_test = enc.encode(x_test)
+        print(f"Признаки test: {feats_test.shape} за {time.time()-t0:.1f}s")
+
+        np.savez_compressed(raw_cache, feats_train=feats_train,
+                            feats_test=feats_test, data_hash=np.array(data_hash))
+        print(f"Сырой кэш сохранён: {raw_cache}")
+
+    assert feats_train is not None and feats_test is not None
 
     # --- верификация порта против кэша CORAL ---
+    # ВНИМАНИЕ: порядок CORAL _augment_images — [все N оригиналов, затем
+    # перемеженные flip/rot/shift]. Оригиналы занимают индексы [0, N).
     coral_cache = ROOT / "data" / "rn50_2048.npz"
     if coral_cache.exists():
         cc = np.load(coral_cache)
-        originals = feats_train[0::4]  # каждый 4-й — оригинал (порядок CORAL)
+        originals = feats_train[: len(x_train)]
         ref = cc["X_train"].astype(np.float32)
         assert originals.shape == ref.shape, (
             f"форма не совпала: {originals.shape} vs {ref.shape}")
@@ -101,14 +126,15 @@ def main():
     np.savez_compressed(
         OUT,
         X_train=feats_train,
-        y_train=np.repeat(y_train, 4),
+        # порядок CORAL: [оригиналы, flip'ы, rotate'ы, shift'ы] → tile, не repeat
+        y_train=np.tile(y_train, 4),
         X_test=feats_test,
         y_test=y_test,
         data_hash=np.array(data_hash),
-        augment=np.array("flip+rot6+shift2_seed42"),
+        augment=np.array("flip+rot6+shift2_seed42_order:orig,flip,rot,shift"),
     )
     print(f"Сохранено: {OUT}")
-    print(f"  X_train {feats_train.shape}, y_train {len(np.repeat(y_train, 4))}")
+    print(f"  X_train {feats_train.shape}, y_train {len(np.tile(y_train, 4))}")
     print(f"  X_test {feats_test.shape}")
 
 
