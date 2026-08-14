@@ -1,0 +1,9 @@
+{
+  "label": "topk4_sen08",
+  "topk": 4,
+  "threshold": 0.0,
+  "seniority": 0.08,
+  "p_last": 0.916,
+  "avg_forgetting": 0.0319,
+  "cls0_forgetting": 0.1333
+}

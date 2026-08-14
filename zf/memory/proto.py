@@ -107,6 +107,9 @@ class PrototypicalMemory:
         v = np.asarray(vector, dtype=np.float32)
         v = v / (np.linalg.norm(v) + 1e-8)
 
+        # регистрируем фазу первого появления класса (для seniority bonus)
+        self._class_phase.setdefault(int(label), self._current_phase)
+
         if self.size >= self.capacity:
             self._grow()
         self.prototypes[self.size] = v
@@ -155,6 +158,11 @@ class PrototypicalMemory:
 
         while self.size + n > self.capacity:
             self._grow()
+
+        # регистрируем фазу первого появления классов (для seniority bonus)
+        for lab in np.unique(labels):
+            self._class_phase.setdefault(int(lab), self._current_phase)
+
         self.prototypes[self.size: self.size + n] = vn
         self.labels[self.size: self.size + n] = labels
         self.counts[self.size: self.size + n] = 1

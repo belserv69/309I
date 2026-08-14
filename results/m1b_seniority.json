@@ -1,0 +1,51 @@
+{
+  "milestone": "M1b",
+  "n_classes": 25,
+  "rows": [
+    {
+      "label": "sen0.0",
+      "topk": 4,
+      "seniority": 0.0,
+      "p_last": 0.912,
+      "avg_forgetting": 0.0458,
+      "cls0_forgetting": 0.1333,
+      "elapsed_s": 2.72
+    },
+    {
+      "label": "sen0.02",
+      "topk": 4,
+      "seniority": 0.02,
+      "p_last": 0.9147,
+      "avg_forgetting": 0.0389,
+      "cls0_forgetting": 0.1333,
+      "elapsed_s": 2.73
+    },
+    {
+      "label": "sen0.05",
+      "topk": 4,
+      "seniority": 0.05,
+      "p_last": 0.916,
+      "avg_forgetting": 0.0361,
+      "cls0_forgetting": 0.1333,
+      "elapsed_s": 2.94
+    },
+    {
+      "label": "sen0.08",
+      "topk": 4,
+      "seniority": 0.08,
+      "p_last": 0.916,
+      "avg_forgetting": 0.0319,
+      "cls0_forgetting": 0.1333,
+      "elapsed_s": 2.9
+    },
+    {
+      "label": "sen0.12",
+      "topk": 4,
+      "seniority": 0.12,
+      "p_last": 0.912,
+      "avg_forgetting": 0.0264,
+      "cls0_forgetting": 0.1333,
+      "elapsed_s": 3.52
+    }
+  ]
+}

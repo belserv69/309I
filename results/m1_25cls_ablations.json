@@ -1,0 +1,72 @@
+{
+  "milestone": "M1",
+  "n_classes": 25,
+  "rows": [
+    {
+      "label": "base_topk8_t0",
+      "topk": 8,
+      "threshold": 0.0,
+      "exemplar_per_class": 0,
+      "p_last": 0.9053,
+      "avg_forgetting": 0.0528,
+      "cls0_forgetting": 0.1333,
+      "total_protos": 1250,
+      "elapsed_s": 3.79
+    },
+    {
+      "label": "topk4",
+      "topk": 4,
+      "threshold": 0.0,
+      "exemplar_per_class": 0,
+      "p_last": 0.912,
+      "avg_forgetting": 0.0458,
+      "cls0_forgetting": 0.1333,
+      "total_protos": 1250,
+      "elapsed_s": 2.54
+    },
+    {
+      "label": "topk16",
+      "topk": 16,
+      "threshold": 0.0,
+      "exemplar_per_class": 0,
+      "p_last": 0.904,
+      "avg_forgetting": 0.0514,
+      "cls0_forgetting": 0.1667,
+      "total_protos": 1250,
+      "elapsed_s": 5.38
+    },
+    {
+      "label": "t0.08",
+      "topk": 8,
+      "threshold": 0.08,
+      "exemplar_per_class": 0,
+      "p_last": 0.9053,
+      "avg_forgetting": 0.0528,
+      "cls0_forgetting": 0.1333,
+      "total_protos": 1250,
+      "elapsed_s": 3.66
+    },
+    {
+      "label": "t0.20",
+      "topk": 8,
+      "threshold": 0.2,
+      "exemplar_per_class": 0,
+      "p_last": 0.9053,
+      "avg_forgetting": 0.0528,
+      "cls0_forgetting": 0.1333,
+      "total_protos": 1250,
+      "elapsed_s": 3.68
+    },
+    {
+      "label": "exemplar20",
+      "topk": 8,
+      "threshold": 0.0,
+      "exemplar_per_class": 20,
+      "p_last": 0.9067,
+      "avg_forgetting": 0.0514,
+      "cls0_forgetting": 0.1333,
+      "total_protos": 1250,
+      "elapsed_s": 19.34
+    }
+  ]
+}
