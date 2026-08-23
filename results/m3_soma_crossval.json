@@ -1,0 +1,36 @@
+{
+  "milestone": "M3",
+  "anchor_soma_base_clean": 0.5802,
+  "rows": [
+    {
+      "label": "m3_soma_topk8_t08",
+      "topk": 8,
+      "threshold": 0.08,
+      "exemplar_per_class": 0,
+      "p_last": 0.5826,
+      "avg_forgetting": 0.1497,
+      "total_protos": 250000,
+      "elapsed_s": 49.3
+    },
+    {
+      "label": "m3_soma_topk8_t0",
+      "topk": 8,
+      "threshold": 0.0,
+      "exemplar_per_class": 0,
+      "p_last": 0.5826,
+      "avg_forgetting": 0.1497,
+      "total_protos": 250000,
+      "elapsed_s": 47.2
+    },
+    {
+      "label": "m3_soma_topk8_t08_ex300",
+      "topk": 8,
+      "threshold": 0.08,
+      "exemplar_per_class": 300,
+      "p_last": 0.5837,
+      "avg_forgetting": 0.1492,
+      "total_protos": 250000,
+      "elapsed_s": 57.4
+    }
+  ]
+}
