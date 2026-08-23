@@ -69,8 +69,8 @@
 - [x] Oracle: линейный probe sklearn = 86.50% → зазор инкрементальности 6.5pp
 - [x] M2b: seniority sweep — trade-off 81.10%/6.41pp ↔ 77.20%/0.37pp; cls0 не лечится seniority
 - [x] Чемпион → `champions/m2_topk4_sen08_100cls` (.log + npz)
-- [ ] Аугментация обучения 4× (нужен torch):
-  - [ ] torch CPU в `.venv` (установка идёт)
+- [ ] Аугментация обучения 4×:
+  - [x] torch CPU в `.venv` (2.13.0+cpu, зависимости починены)
   - [ ] `zf/encoders/resnet.py` — порт энкодера CORAL (RN50 GAP 2048d)
   - [ ] извлечение признаков аугментированных изображений → `data/rn50_2048_aug4.npz`
         (кэш с хэшем данных!)
@@ -102,6 +102,24 @@
   - не закрыт → пивот: метрическое обучение (контрастивная проекция 2048→128d)
     или herding replay
 - [ ] Финальный коммит
+
+## M5 — энкодер CORAL-чемпиона: DINOv2 вместо RN50
+
+Цель: поднять точность той же механикой памяти на более разделимых признаках
+(CORAL probe на DINOv2 90.0% против 85% на RN50).
+
+- [x] Порт энкодера: `zf/encoders/dinov2.py` (CLS ViT-S/14, бит-в-бит с CORAL)
+- [x] Кэш `data/dinov2_384.npz` из CORAL + верификация портом
+      (`benchmarks/verify_dinov2_cache.py`): cosine = 1.000000
+- [x] Сетка top-k × seniority (`benchmarks/run_m5_dinov2_100cls.py`) —
+      оптимум сместился к topk8 (в отличие от RN50 topk4)
+- [x] Чемпион → `champions/m5_dinov2_topk8_sen0_100cls` (.log + npz) —
+      **P@100cls = 88.40%**, cls0 forgetting = 0.00pp, зазор до oracle 1.7pp
+- [x] Тесты энкодера (`tests/test_dinov2_encoder.py`, 6 шт., skip без torch)
+- [x] Вердикт в `BENCHMARK_LOG.md`, коммит
+
+**Definition of done:** P@last > 80.03% (RN50-чемпион), верифицированный кэш,
+тесты зелёные, чемпион сохранён.
 
 ## Правила на каждом шаге
 

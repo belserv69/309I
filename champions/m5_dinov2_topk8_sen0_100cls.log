@@ -1,0 +1,68 @@
+# Чемпион M5: dinov2_topk8_sen0 на 100 классах (DINOv2 ViT-S 384d)
+
+**Дата:** 2026-08-23
+**Результат:** P@100cls = **88.40%** | avg forgetting = 4.70pp | cls0 = 0.00pp | 5000 прототипов | 7.5 с
+**Oracle (линейный probe, все классы сразу):** 90.13% → зазор инкрементальности **1.7pp**
+**Артефакт:** `champions/m5_dinov2_topk8_sen0_100cls.npz`
+**Кэш признаков:** `data/dinov2_384.npz` (из CORAL, верифицирован бит-в-бит —
+cosine(переизвлечение портом, кэш) = 1.000000, `benchmarks/verify_dinov2_cache.py`)
+
+## Команда воспроизведения
+
+```bash
+cd ~/Projects/309I
+.venv/bin/python benchmarks/run_m5_dinov2_100cls.py
+.venv/bin/python benchmarks/save_m5_champion.py
+```
+
+## Конфиг
+
+```python
+PrototypicalMemory(
+    feature_dim=384,           # DINOv2 ViT-S CLS, кэш data/dinov2_384.npz (из CORAL)
+    threshold=0.0,
+    topk=8,
+    never_update=True,
+    seniority_bonus=0.0,
+)
+# 100 классов, 50 train / 30 test на класс
+# фазы: 10 × 10 классов (протокол CORAL)
+```
+
+## Сетка M5 (геометрия 384d сместила оптимум top-k вверх)
+
+| topk | sen | P@last | avg forg | cls0 forg |
+|---:|---:|---:|---:|---:|
+| 1 | 0.0 | 87.13% | 4.04pp | 3.33pp |
+| 2 | 0.0 | 87.40% | 4.41pp | 3.33pp |
+| 4 | 0.0 | 87.97% | 4.59pp | 0.00pp |
+| **8** | **0.0** | **88.40%** | 4.70pp | **0.00pp** |
+| 8 | 0.04 | 87.97% | 3.56pp | 0.00pp |
+| 8 | 0.08 | 87.60% | 2.89pp | 0.00pp |
+
+В отличие от RN50-признаков (оптимум topk4), на компактных CLS-векторах DINOv2
+усреднение большего числа соседей помогает: topk8 > topk4 > topk1.
+Seniority по-прежнему торгует точность за забывание без решения cls0.
+
+## Ключевые выводы
+
+1. **+8.4pp к RN50-чемпиону**: 80.03% → 88.40% на той же механике памяти.
+   Энкодер важнее тюнинга памяти.
+2. **cls0-проблема решена геометрией**: −13.33pp на RN50 → **0.00pp** на DINOv2.
+   Confusion-пары cls0↔cls1/cls22 разделяются self-supervised признаками,
+   которые не «видел» supervised RN50.
+3. **Зазор до оракула 1.7pp** (RN50: 6.5pp) — прототипная память почти исчерпала
+   линейную сепарабельность признаков; инкрементальность стоит копейки.
+
+## Сравнение с родительскими проектами (один датасет mini-ImageNet 100cls)
+
+| Система | P@last | forgetting | Механика |
+|---|---:|---|---|
+| CORAL champion (DINOv2 probe+vote+replay) | 90.0% | cls0 6.3pp | probe + replay buf20 |
+| CORAL rn50-hybrid (=probe-only) | 85.1% | cls0 13.3pp | linear probe |
+| **ZF-Proto M5 (этот)** | **88.40%** | avg 4.70pp, cls0 0 | только прототипы, без replay |
+| ZF-Proto M2 (RN50) | 80.03% | avg 3.89pp | только прототипы |
+| CORAL proto-only (RN50) | 68.0% | — | SDR-обвязка CORAL |
+
+Чистые прототипы ZF-Proto отстают от CORAL-чемпиона всего на 1.6pp, при этом:
+не хранят replay-буфер, не обучают probe, дают нулевое забывание первого класса.

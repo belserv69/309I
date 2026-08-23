@@ -1,0 +1,52 @@
+{
+  "label": "m5_dinov2_champion",
+  "topk": 4,
+  "seniority": 0.08,
+  "p_last": 0.8746666666666668,
+  "avg_forgetting": 0.03148148148148148,
+  "cls0_forgetting": 0.0,
+  "total_protos": 5000,
+  "phases": [
+    {
+      "phase": 0,
+      "accuracy": 0.9766666666666668
+    },
+    {
+      "phase": 1,
+      "accuracy": 0.9299999999999999
+    },
+    {
+      "phase": 2,
+      "accuracy": 0.9355555555555555
+    },
+    {
+      "phase": 3,
+      "accuracy": 0.9366666666666668
+    },
+    {
+      "phase": 4,
+      "accuracy": 0.9273333333333333
+    },
+    {
+      "phase": 5,
+      "accuracy": 0.9105555555555556
+    },
+    {
+      "phase": 6,
+      "accuracy": 0.9042857142857142
+    },
+    {
+      "phase": 7,
+      "accuracy": 0.8833333333333334
+    },
+    {
+      "phase": 8,
+      "accuracy": 0.8770370370370371
+    },
+    {
+      "phase": 9,
+      "accuracy": 0.8746666666666668
+    }
+  ],
+  "oracle": 0.9013333333333333
+}
