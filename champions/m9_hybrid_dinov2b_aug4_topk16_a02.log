@@ -1,0 +1,52 @@
+# Чемпион M9: гибрид на DINOv2 ViT-B aug4 (topk16, α=0.2)
+
+**Дата:** 2026-08-23
+**Результат:** P@100cls = **94.23%** | avg forgetting = 2.26pp | cls0 = 3.33pp | 20000 прототипов 768d | 61 с
+**Артефакт:** `champions/m9_hybrid_dinov2b_aug4_topk16_a02.npz`
+**Кэши:** `data/dinov2b_768.npz`, `data/dinov2b_768_aug4.npz` (порт верифицирован, cosine=1.000000)
+
+## Команда воспроизведения
+
+```bash
+cd ~/Projects/309I
+.venv/bin/python benchmarks/extract_dinov2b.py      # ~55 мин CPU (однократно)
+.venv/bin/python benchmarks/run_m9_dinov2b.py       # все конфигурации
+.venv/bin/python benchmarks/save_m9_champion.py     # чемпион
+```
+
+## Конфиг
+
+```python
+mem = PrototypicalMemory(feature_dim=768, threshold=0.0, topk=16,
+                         never_update=True)   # DINOv2 ViT-B CLS, aug4 → 20k прототипов
+# после каждой фазы LogisticRegression(max_iter=1000, C=1.0)
+#   обучается только на прототипах памяти
+# скор = 0.2·P_probe_norm + 0.8·S_memory_norm
+```
+
+## Результаты M9 на ViT-B
+
+| Конфигурация | P@last | avg forg | cls0 |
+|---|---:|---:|---:|
+| Чистая память k8 | 92.23% | 3.07pp | 3.33pp |
+| **Гибрид α=0.2 k16** | **94.23%** | **2.26pp** | 3.33pp |
+
+Линия «энкодер важнее тюнинга» подтверждена в четвёртый раз:
+
+| Энкодер | Гибрид | Прирост от энкодера |
+|---|---:|---:|
+| RN50 2048d | — (память 80.03%) | база |
+| ViT-S 384d | 91.03% | +11.0pp |
+| **ViT-B 768d** | **94.23%** | **+14.2pp** |
+
+## Сравнение с родителями (mini-ImageNet 100cls)
+
+| Система | P@last |
+|---|---:|
+| **ZF-Proto M9 (этот)** | **94.23%** |
+| CORAL champion | 90.0% |
+| Oracle probe RN50 (M2) | 86.5% |
+
+Отрыв от CORAL-чемпиона — **+4.2pp**. Забывание при этом ниже (2.26pp против
+6.3pp), а система по-прежнему не хранит сырых данных и не выходит за пределы
+собственной памяти.

@@ -1,0 +1,21 @@
+[
+  {
+    "config": "pure_k8",
+    "p_last": 0.9223333333333333,
+    "avg_forgetting": 0.03074074074074074,
+    "cls0_forgetting": 0.033333333333333326
+  },
+  {
+    "config": "pure_k16",
+    "p_last": 0.9196666666666669,
+    "avg_forgetting": 0.03444444444444444,
+    "cls0_forgetting": 0.06666666666666665
+  },
+  {
+    "config": "hybrid_a0.2_k16",
+    "p_last": 0.9423333333333334,
+    "avg_forgetting": 0.02259259259259259,
+    "cls0_forgetting": 0.033333333333333326,
+    "elapsed_s": 67.7162492275238
+  }
+]

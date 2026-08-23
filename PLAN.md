@@ -163,6 +163,24 @@
 
 **Definition of done:** total ≥ 77% ✓ (81.4%)
 
+## M8 — дистилляция гибрида (LwF-lite)
+
+- [x] Порт train_probe из CORAL (CE + KL по старым колонкам, T=2)
+- [x] Багфикс выравнивания колонок probe под классы памяти
+- [x] Сетка lam: lam≥1 полностью снимает cls0-дрейф (10pp→0pp);
+      lam=1.0 — лучший баланс (89.20%, avg forg 0.37pp)
+- [x] Вердикт в `BENCHMARK_LOG.md`, коммит
+
+## M9 — энкодер ViT-B/14 (768d)
+
+- [x] Извлечение base + aug4 (`extract_dinov2b.py`), верификация cosine=1.0
+- [x] Чистая память k8: **92.23%** (+3.8pp к ViT-S)
+- [x] Гибрид α=0.2: **94.23%** (+3.2pp к ViT-S) — отрыв от CORAL +4.2pp
+- [x] Чемпион → `champions/m9_hybrid_dinov2b_aug4_topk16_a02` (.log + npz)
+- [x] Вердикт в `BENCHMARK_LOG.md`, коммит
+
+**Definition of done:** P@last > 91.03% (ViT-S-чемпион) ✓ (94.23%)
+
 ## Правила на каждом шаге
 
 1. Перед новым экспериментом сохранить текущего лидера в `champions/` (pkl на диске + log в git).
