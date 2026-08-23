@@ -1,0 +1,7 @@
+{
+  "label": "aug4_zscore_k16",
+  "topk": 16,
+  "seniority": 0.0,
+  "p_last": 0.8883333333333334,
+  "avg_forgetting": 0.04629629629629629
+}

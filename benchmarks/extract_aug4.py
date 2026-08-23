@@ -126,12 +126,13 @@ def main():
     np.savez_compressed(
         OUT,
         X_train=feats_train,
-        # порядок CORAL: [оригиналы, flip'ы, rotate'ы, shift'ы] → tile, не repeat
-        y_train=np.tile(y_train, 4),
+        # порядок augment_images (как в CORAL): [оригиналы N][per-sample
+        # тройки flip/rot/shift] → метки: y + interleave(y×3), НЕ tile!
+        y_train=np.concatenate([y_train, np.repeat(y_train, 3)]),
         X_test=feats_test,
         y_test=y_test,
         data_hash=np.array(data_hash),
-        augment=np.array("flip+rot6+shift2_seed42_order:orig,flip,rot,shift"),
+        augment=np.array("flip+rot6+shift2_seed42_order:orig,(flip,rot,shift)xN"),
     )
     print(f"Сохранено: {OUT}")
     print(f"  X_train {feats_train.shape}, y_train {len(np.tile(y_train, 4))}")

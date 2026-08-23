@@ -1,0 +1,7 @@
+{
+  "label": "aug4_plain_k32",
+  "topk": 32,
+  "seniority": 0.0,
+  "p_last": 0.8846666666666668,
+  "avg_forgetting": 0.04777777777777777
+}
