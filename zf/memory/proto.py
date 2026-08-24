@@ -264,7 +264,8 @@ class PrototypicalMemory:
     def observe_batch(self, vectors: np.ndarray,
                       novelty_threshold: float | None = None,
                       min_cluster_size: int = 3,
-                      merge_cos: float | None = None) -> tuple[np.ndarray, dict]:
+                      merge_cos: float | None = None,
+                      repeat_cos: float = 0.999) -> tuple[np.ndarray, dict]:
         """Открытый мир: unlabeled-поток с авто-добавлением классов.
 
         Каждый вектор относится к классу с лучшим скором; если max-cosine
@@ -289,11 +290,17 @@ class PrototypicalMemory:
                 с центроидами других выросших новых кластеров; при косинусе
                 выше merge_cos донор перевешивается на метку акцептора
                 (прототипы не удаляются, меняются только метки).
+            repeat_cos: узнавание повторного показа. Вектор, чей ближайший
+                прототип совпадает с ним по косинусу >= repeat_cos, получает
+                метку своего прототипа БЕЗ перекомпетиции классов — повторное
+                обучение на тех же данных не может ухудшить назначения,
+                только консолидирует центроиды (концепция проекта).
 
         Returns:
             assigned: (N,) int32 — присвоенные метки (-2 = шумовой кластер).
             info: {"n_created": int, "created_labels": list[int],
-                   "noise_labels": list[int], "n_merges": int}
+                   "noise_labels": list[int], "n_merges": int,
+                   "n_repeats": int}
         """
         vectors = np.asarray(vectors, dtype=np.float32)
         n = len(vectors)
@@ -306,22 +313,37 @@ class PrototypicalMemory:
         rows_by_label: dict[int, list[int]] = {}
         cents: dict[int, np.ndarray] = {}   # нормированные центроиды живых кластеров
         n_merges = 0
+        n_repeats = 0
 
         for i in range(n):
-            score = float(self.novelty_scores_batch(vn[i][None])[0])
-            if self.size == 0 or (
-                novelty_threshold is not None and score < novelty_threshold
-            ):
-                label = next_label
-                next_label += 1
-                created_labels.add(label)
-            else:
-                preds, _ = self.query_batch(vn[i][None])
-                label = int(preds[0])
-                if label < 0:  # ни один класс не прошёл threshold
+            # повторный показ: вектор узнаёт себя по замороженному прототипу
+            label = -1
+            if self.size and repeat_cos is not None:
+                if self._dirty:
+                    self._rebuild_faiss()
+                import faiss
+                assert self._faiss_index is not None
+                D, I = self._faiss_index.search(
+                    np.ascontiguousarray(vn[i][None], dtype=np.float32), 1)
+                if float(D[0, 0]) >= repeat_cos:
+                    label = int(self.labels[I[0, 0]])
+                    n_repeats += 1
+
+            if label < 0:
+                score = float(self.novelty_scores_batch(vn[i][None])[0])
+                if self.size == 0 or (
+                    novelty_threshold is not None and score < novelty_threshold
+                ):
                     label = next_label
                     next_label += 1
                     created_labels.add(label)
+                else:
+                    preds, _ = self.query_batch(vn[i][None])
+                    label = int(preds[0])
+                    if label < 0:  # ни один класс не прошёл threshold
+                        label = next_label
+                        next_label += 1
+                        created_labels.add(label)
             # абсорбция: вектор замораживается прототипом своего класса
             self.add_batch(vn[i][None], np.array([label], dtype=np.int32))
             assigned[i] = label
@@ -365,6 +387,7 @@ class PrototypicalMemory:
             "created_labels": sorted(created_labels),
             "noise_labels": noise_labels,
             "n_merges": n_merges,
+            "n_repeats": n_repeats,
         }
 
     def class_scores_batch(self, vectors: np.ndarray,

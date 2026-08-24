@@ -51,6 +51,19 @@ class TestObserveBatch:
         assert (assigned[:5] == assigned[0]).all()
         assert (assigned[5:] == assigned[5]).all()
 
+    def test_repeat_pass_preserves_assignments(self):
+        """Повторное обучение на том же потоке не ухудшает назначения
+        (концепция проекта): вектор узнаёт себя по замороженному прототипу."""
+        mem, c0, c1 = self._mem_two_clusters()
+        stream = np.concatenate([_cluster(c0, 5), _cluster(c1, 5)])
+        a1, info1 = mem.observe_batch(stream, novelty_threshold=None)
+        a2, info2 = mem.observe_batch(stream, novelty_threshold=None)
+        assert info1["n_created"] == 0
+        assert info2["n_created"] == 0
+        assert info2["n_repeats"] == len(stream)
+        m = (a1 >= 0) & (a2 >= 0)
+        assert (a1[m] == a2[m]).all()
+
     def test_unknown_cluster_creates_new_class(self):
         mem, c0, _ = self._mem_two_clusters()
         # ортогональный кластер — заведомо «новый»
