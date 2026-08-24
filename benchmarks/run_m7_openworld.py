@@ -32,7 +32,9 @@ from zf.novelty import evaluate_detection
 from zf.pipeline import run_continual
 
 RESULTS = Path(__file__).resolve().parent.parent / "results"
-CACHE = Path(__file__).resolve().parent.parent / "data" / "dinov2_384.npz"
+CACHE = Path(sys.argv[1]) if len(sys.argv) > 1 else (
+    Path(__file__).resolve().parent.parent / "data" / "dinov2_384.npz")
+MERGE_COS = float(sys.argv[2]) if len(sys.argv) > 2 else None  # онлайн-слияние
 N_BASE = 50          # классы 0..49 — база с метками
 N_OPEN = 50          # классы 50..99 — открытия без меток
 PHASES = [[p * 10 + i for i in range(10)] for p in range(5)]
@@ -93,7 +95,8 @@ def main() -> None:
     X_ncm, y_ncm = X_all[half:], y_all[half:]        # NCM-проверка
 
     assigned, info = mem.observe_batch(X_disc, novelty_threshold=tau,
-                                       min_cluster_size=3)
+                                       min_cluster_size=3,
+                                       merge_cos=MERGE_COS)
     mask = assigned >= 0
     n_disc = len(set(assigned[mask].tolist()))
     acc_disc = hungarian_accuracy(y_disc[mask], assigned[mask])
@@ -182,8 +185,12 @@ def main() -> None:
           f"{acc_merged*100:.1f}% → взвешенно {total*100:.1f}% "
           f"(CORAL: 77–78%, supervised ref 90.0%)")
 
+    tag = CACHE.stem  # dinov2_384 | dinov2b_768
+    mtag = "base" if MERGE_COS is None else f"m{int(MERGE_COS*100)}"
     out = {
         "protocol": f"train {N_BASE} labeled → discover {N_OPEN} unlabeled",
+        "cache": str(CACHE.name),
+        "merge_cos": MERGE_COS,
         "base_p_last": stats["p_last"],
         "tau": tau, "auroc": auroc, **det,
         "n_created": info["n_created"],
@@ -196,7 +203,8 @@ def main() -> None:
         "ncm_memory_acc": acc_mem_new,
         "total_weighted": float(total),
     }
-    (RESULTS / "m7_openworld.json").write_text(json.dumps(out, indent=2))
+    (RESULTS / f"m7_openworld_{tag}_{mtag}.json").write_text(
+        json.dumps(out, indent=2))
 
 
 if __name__ == "__main__":

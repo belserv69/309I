@@ -26,7 +26,8 @@ from torch import nn
 from zf.data import load_features
 
 RESULTS = Path(__file__).resolve().parent.parent / "results"
-CACHE = Path(__file__).resolve().parent.parent / "data" / "dinov2_384_aug4.npz"
+CACHE = Path(sys.argv[1]) if len(sys.argv) > 1 else (
+    Path(__file__).resolve().parent.parent / "data" / "dinov2_384_aug4.npz")
 PHASES = [[p * 10 + i for i in range(10)] for p in range(10)]
 TOPK, ALPHA, TEMP = 16, 0.2, 2.0
 LR, EPOCHS, BATCH = 1e-3, 10, 256
@@ -153,4 +154,6 @@ if __name__ == "__main__":
               f"cls0={r['cls0_forgetting']*100:.2f}pp t={r['elapsed_s']:.0f}s",
               flush=True)
         out.append(r)
-    (RESULTS / "m8_distill_grid.json").write_text(json.dumps(out, indent=2))
+    tag = CACHE.stem
+    (RESULTS / f"m8_distill_grid_{tag}.json").write_text(
+        json.dumps(out, indent=2))

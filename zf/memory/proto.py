@@ -263,7 +263,8 @@ class PrototypicalMemory:
 
     def observe_batch(self, vectors: np.ndarray,
                       novelty_threshold: float | None = None,
-                      min_cluster_size: int = 3) -> tuple[np.ndarray, dict]:
+                      min_cluster_size: int = 3,
+                      merge_cos: float | None = None) -> tuple[np.ndarray, dict]:
         """Открытый мир: unlabeled-поток с авто-добавлением классов.
 
         Каждый вектор относится к классу с лучшим скором; если max-cosine
@@ -273,20 +274,26 @@ class PrototypicalMemory:
         к нему. Механика авто-создания CORAL process()/MetaController:
         низкий overlap → CREATE_PROTOTYPE.
 
+        Механика абсорбции (как в CORAL): КАЖДЫЙ наблюдаемый вектор становится
+        замороженным прототипом — либо первым прототипом нового класса
+        (max-cosine ниже порога), либо присоединяется к лучшему существующему
+        классу. Так классы-новинки растут с приходом своих же семплов.
+
         Args:
             vectors: (N, dim) признаки unlabeled-потока (порядок важен).
             novelty_threshold: порог max-cosine; None → без авто-добавления.
             min_cluster_size: классы-новинки из меньшего числа прототипов
                 помечаются -2 (шум) в assigned (прототипы не удаляются).
+            merge_cos: если задан — онлайн-слияние: когда новый кластер
+                вырастает до min_cluster_size, его центроид сравнивается
+                с центроидами других выросших новых кластеров; при косинусе
+                выше merge_cos донор перевешивается на метку акцептора
+                (прототипы не удаляются, меняются только метки).
 
         Returns:
             assigned: (N,) int32 — присвоенные метки (-2 = шумовой кластер).
-            info: {"n_created": int, "created_labels": list[int], ...}
-
-        Механика абсорбции (как в CORAL): КАЖДЫЙ наблюдаемый вектор становится
-        замороженным прототипом — либо первым прототипом нового класса
-        (max-cosine ниже порога), либо присоединяется к лучшему существующему
-        классу. Так классы-новинки растут с приходом своих же семплов.
+            info: {"n_created": int, "created_labels": list[int],
+                   "noise_labels": list[int], "n_merges": int}
         """
         vectors = np.asarray(vectors, dtype=np.float32)
         n = len(vectors)
@@ -296,6 +303,9 @@ class PrototypicalMemory:
         next_label = int(self.labels[: self.size].max()) + 1 if self.size else 0
         assigned = np.full(n, -1, dtype=np.int32)
         created_labels: set[int] = set()
+        rows_by_label: dict[int, list[int]] = {}
+        cents: dict[int, np.ndarray] = {}   # нормированные центроиды живых кластеров
+        n_merges = 0
 
         for i in range(n):
             score = float(self.novelty_scores_batch(vn[i][None])[0])
@@ -316,6 +326,31 @@ class PrototypicalMemory:
             self.add_batch(vn[i][None], np.array([label], dtype=np.int32))
             assigned[i] = label
 
+            # онлайн-слияние новых кластеров (см. docstring merge_cos)
+            if merge_cos is not None and label in created_labels:
+                rows_by_label.setdefault(label, []).append(i)
+                if len(rows_by_label[label]) == min_cluster_size:
+                    c = vn[rows_by_label[label]].mean(axis=0)
+                    c /= (np.linalg.norm(c) + 1e-12)
+                    best_lbl, best_sim = -1, merge_cos
+                    for other, oc in cents.items():
+                        sim = float(c @ oc)
+                        if sim > best_sim:
+                            best_lbl, best_sim = other, sim
+                    if best_lbl >= 0:
+                        # донор перевешивается на метку акцептора
+                        mask = self.labels[: self.size] == label
+                        self.labels[: self.size][mask] = best_lbl
+                        assigned[rows_by_label[label]] = best_lbl
+                        rows_by_label[best_lbl].extend(rows_by_label[label])
+                        del rows_by_label[label]
+                        cents.pop(label, None)
+                        created_labels.discard(label)
+                        n_merges += 1
+                        c = vn[rows_by_label[best_lbl]].mean(axis=0)
+                        c /= (np.linalg.norm(c) + 1e-12)
+                    cents[best_lbl if best_lbl >= 0 else label] = c
+
         # мелкие классы-новинки → шум
         noise_labels: list[int] = []
         if min_cluster_size > 1:
@@ -329,6 +364,7 @@ class PrototypicalMemory:
             "n_created": len(created_labels),
             "created_labels": sorted(created_labels),
             "noise_labels": noise_labels,
+            "n_merges": n_merges,
         }
 
     def class_scores_batch(self, vectors: np.ndarray,

@@ -1,0 +1,16 @@
+{
+  "config": {
+    "cache": "dinov2b_768.npz",
+    "topk": 8,
+    "tau": 0.37618640810251236,
+    "min_cluster_size": 3,
+    "merge_cos": 0.45,
+    "n_base": 50,
+    "n_open": 50
+  },
+  "n_created": 145,
+  "n_merges": 7,
+  "n_noise": 98,
+  "n_protos_total": 3250,
+  "elapsed_s": 6.155833721160889
+}
