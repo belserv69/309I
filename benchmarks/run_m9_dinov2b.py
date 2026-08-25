@@ -28,7 +28,18 @@ ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "results"
 CACHE_BASE = ROOT / "data" / "dinov2b_768.npz"
 CACHE_AUG = ROOT / "data" / "dinov2b_768_aug4.npz"
+# опционально: кэш с альтернативным X_test (напр. TTA5), train не меняется
+TEST_OVERRIDE = Path(sys.argv[1]) if len(sys.argv) > 1 else None
 PHASES = [[p * 10 + i for i in range(10)] for p in range(10)]
+
+
+def load_with_override(path: Path) -> dict:
+    d = load_features(path)
+    if TEST_OVERRIDE is not None:
+        t = np.load(TEST_OVERRIDE)
+        assert np.array_equal(t["y_test"], d["y_test"])
+        d["X_test"] = t["X_test"]
+    return d
 
 
 def norm_rows(M: np.ndarray) -> np.ndarray:
@@ -93,11 +104,13 @@ if __name__ == "__main__":
     torch_seed_note = "детерминизм: sklearn LBFGS"
     results = []
 
-    base = load_features(CACHE_BASE)
-    aug = load_features(CACHE_AUG)
-    print(f"base {base['X_train'].shape} | aug4 {aug['X_train'].shape}")
+    base = load_with_override(CACHE_BASE)
+    aug = load_with_override(CACHE_AUG)
+    print(f"base {base['X_train'].shape} | aug4 {aug['X_train'].shape}"
+          + (f" | test из {TEST_OVERRIDE.name}" if TEST_OVERRIDE else ""))
 
     for k in (8, 16):
         results.append(pure_memory(base, k))
     results.append(hybrid(aug))
-    (RESULTS / "m9_dinov2b.json").write_text(json.dumps(results, indent=2))
+    tag = "_tta5" if TEST_OVERRIDE else ""
+    (RESULTS / f"m9_dinov2b{tag}.json").write_text(json.dumps(results, indent=2))
