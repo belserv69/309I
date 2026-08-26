@@ -1,0 +1,21 @@
+{
+  "protocol": "train 50 labeled \u2192 discover 50 unlabeled",
+  "cache": "dinov2b_768_tta5.npz",
+  "merge_cos": 0.45,
+  "base_p_last": 0.9580000000000001,
+  "tau": 0.3640389204025269,
+  "auroc": 0.9393466666666667,
+  "fpr": 0.05333333333333334,
+  "tpr": 0.7406666666666667,
+  "n_id": 750.0,
+  "n_ood": 1500.0,
+  "n_created": 121,
+  "n_noise": 77,
+  "n_discovered_raw": 73,
+  "discovery_hungarian_acc_raw": 0.8564814814814815,
+  "n_clusters_after_merge": 44,
+  "discovery_hungarian_acc_merged": 0.8564814814814815,
+  "ncm_centroid_acc": 0.86,
+  "ncm_memory_acc": 0.8137082601054482,
+  "total_weighted": 0.8853333333333333
+}
