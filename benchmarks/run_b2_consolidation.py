@@ -202,13 +202,75 @@ def main() -> None:
         })
         prev_assigned = assigned.copy()
 
-    # 5. Итог по формуле CORAL (лучший проход по NCM после слияния)
+        # 5. Селективный replay СРАЗУ после прохода 1: только шумовые
+        #    строки (-2), БЕЗ repeat-шортката — они конкурируют заново и
+        #    либо присоединяются к большим кластерам, либо создают новые
+        #    (снова фильтруются по min_cluster_size). Валидные назначения
+        #    не трогаются. Важно делать ДО полных повторов: иначе в памяти
+        #    появляются дубликаты прототипов (тот же вектор под другой
+        #    меткой) и repeat-узнавание становится неоднозначным.
+        if p == 1:
+            pass1_assigned = assigned.copy()
+            noise_rows = np.where(pass1_assigned < 0)[0]
+            final = pass1_assigned.copy()
+            sel_created = sel_joined = 0
+            if len(noise_rows):
+                sel_a, sel_info = mem.observe_batch(
+                    X_disc[noise_rows], novelty_threshold=tau,
+                    min_cluster_size=3, merge_cos=MERGE_COS, repeat_cos=None)
+                final[noise_rows] = sel_a
+                sel_created = sel_info["n_created"]
+                sel_joined = int((sel_a >= 0).sum())
+            f_mask = final >= 0
+            f_cov = float(f_mask.mean())
+            acc_f_full = hungarian_accuracy(y_disc[f_mask], final[f_mask])
+            acc_f_stable = hungarian_accuracy(
+                y_disc[stable_rows], final[stable_rows])
+            both = stable_rows & f_mask
+            agree_f = float((final[both] == pass1_assigned[both]).mean())
+            acc_f_ncm, n_fcl = ncm_centroid_acc(
+                X_disc, y_disc, final, X_ncm, y_ncm)
+            merged_f = greedy_merge(final, X_disc, merge_cos=0.85,
+                                    n_base=N_BASE)
+            acc_mf_full = hungarian_accuracy(y_disc[merged_f >= 0],
+                                             merged_f[merged_f >= 0])
+            acc_mf_stable = hungarian_accuracy(
+                y_disc[stable_rows], merged_f[stable_rows])
+            acc_mf_ncm, n_mfcl = ncm_centroid_acc(
+                X_disc, y_disc, merged_f, X_ncm, y_ncm)
+            print(f"{'sel':>4} {sel_created:>7} {'':>6} {'':>7} "
+                  f"{f_cov*100:>6.1f} {acc_f_full*100:>7.2f} "
+                  f"{acc_f_stable*100:>8.2f} {agree_f*100:>6.1f} "
+                  f"{n_fcl:>8} {acc_f_ncm*100:>7.2f} | "
+                  f"merge@0.85: {n_mfcl:>3} кл, "
+                  f"H {acc_mf_full*100:.2f}/{acc_mf_stable*100:.2f}, "
+                  f"NCM {acc_mf_ncm*100:.2f} "
+                  f"(ре-конкурировало шума: {len(noise_rows)}, "
+                  f"получили метку: {sel_joined})")
+            rows_out.append({
+                "pass": "selective",
+                "n_noise_recompeted": int(len(noise_rows)),
+                "n_noise_got_label": sel_joined,
+                "n_created": sel_created,
+                "coverage": f_cov,
+                "hungarian_full": acc_f_full,
+                "hungarian_stable": acc_f_stable,
+                "agreement_with_prev": agree_f,
+                "n_clusters": n_fcl,
+                "ncm_centroid_acc": acc_f_ncm,
+                "merged_n_clusters": n_mfcl,
+                "merged_hungarian_full": acc_mf_full,
+                "merged_hungarian_stable": acc_mf_stable,
+                "merged_ncm_centroid_acc": acc_mf_ncm,
+            })
+
+    # 6. Итог по формуле CORAL (лучший проход по NCM после слияния)
     best = max(rows_out, key=lambda r: r["merged_ncm_centroid_acc"])
+    best_h = best["merged_hungarian_full"]
     total = (stats["p_last"] * len(base["X_test"])
-             + best["merged_hungarian_full"] * len(X_disc)) / (
-        len(base["X_test"]) + len(X_disc))
-    print(f"\n[total@pass{best['pass']}] база {stats['p_last']*100:.1f}% + "
-          f"открытия {best['merged_hungarian_full']*100:.1f}% → взвешенно "
+             + best_h * len(X_disc)) / (len(base["X_test"]) + len(X_disc))
+    print(f"\n[total@{best['pass']}] база {stats['p_last']*100:.1f}% + "
+          f"открытия {best_h*100:.1f}% → взвешенно "
           f"{total*100:.1f}% | NCM(merge) "
           f"{best['merged_ncm_centroid_acc']*100:.2f}%")
 

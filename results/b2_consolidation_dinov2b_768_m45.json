@@ -23,6 +23,22 @@
       "merged_ncm_centroid_acc": 0.8773333333333333
     },
     {
+      "pass": "selective",
+      "n_noise_recompeted": 112,
+      "n_noise_got_label": 112,
+      "n_created": 0,
+      "coverage": 1.0,
+      "hungarian_full": 0.7306666666666667,
+      "hungarian_stable": 0.8589341692789969,
+      "agreement_with_prev": 1.0,
+      "n_clusters": 164,
+      "ncm_centroid_acc": 0.82,
+      "merged_n_clusters": 164,
+      "merged_hungarian_full": 0.7306666666666667,
+      "merged_hungarian_stable": 0.8589341692789969,
+      "merged_ncm_centroid_acc": 0.82
+    },
+    {
       "pass": 2,
       "n_created": 0,
       "n_merges": 0,
