@@ -51,12 +51,21 @@ def main() -> None:
 
     enc = DINOV2Encoder(model_name=model_name, batch_size=64)
     n = len(x_test)
-    acc = np.zeros((n, enc.feature_dim), dtype=np.float64)
+    # чекпоинт: переживает убийство процесса, каждый вид сохраняется сразу
+    ckpt = DATA / f"{Path(base_name).stem}_tta5_partial.npz"
+    if ckpt.exists():
+        ckd = np.load(ckpt)
+        acc, start_v = ckd["acc"], int(ckd["done"])
+        assert acc.shape == (n, enc.feature_dim)
+        print(f"чекпоинт: {start_v}/5 видов готовы, продолжаю", flush=True)
+    else:
+        acc, start_v = np.zeros((n, enc.feature_dim), dtype=np.float64), 0
     t0 = time.time()
-    for v in range(5):
+    for v in range(start_v, 5):
         views = np.concatenate([tta_views(x_test[i])[[v]] for i in range(n)])
         feats = enc.encode(views).astype(np.float64)
         acc += feats
+        np.savez(ckpt, acc=acc, done=np.array(v + 1))
         print(f"view {v}: done ({time.time()-t0:.0f}s)", flush=True)
     X_test_avg = (acc / 5.0).astype(np.float32)
 
@@ -66,6 +75,7 @@ def main() -> None:
                         encoder=np.array(enc.model_name),
                         tta=np.array("orig,flip,rot6,rot-6,shift11"))
     print(f"Сохранено: {out_path} | X_test {X_test_avg.shape}")
+    ckpt.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

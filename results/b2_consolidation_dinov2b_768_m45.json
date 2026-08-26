@@ -1,0 +1,60 @@
+{
+  "protocol": "B2 consolidation: 50 labeled base \u2192 50 unlabeled, 3 passes",
+  "cache": "dinov2b_768.npz",
+  "merge_cos": 0.45,
+  "passes": 3,
+  "base_p_last": 0.9613333333333334,
+  "tau": 0.3639878198504448,
+  "per_pass": [
+    {
+      "pass": 1,
+      "n_created": 134,
+      "n_merges": 5,
+      "n_repeats": 0,
+      "coverage": 0.8506666666666667,
+      "hungarian_full": 0.8589341692789969,
+      "hungarian_stable": 0.8589341692789969,
+      "agreement_with_prev": 1.0,
+      "n_clusters": 76,
+      "ncm_centroid_acc": 0.8773333333333333,
+      "merged_n_clusters": 76,
+      "merged_hungarian_full": 0.8589341692789969,
+      "merged_hungarian_stable": 0.8589341692789969,
+      "merged_ncm_centroid_acc": 0.8773333333333333
+    },
+    {
+      "pass": 2,
+      "n_created": 0,
+      "n_merges": 0,
+      "n_repeats": 750,
+      "coverage": 1.0,
+      "hungarian_full": 0.7306666666666667,
+      "hungarian_stable": 0.8589341692789969,
+      "agreement_with_prev": 1.0,
+      "n_clusters": 164,
+      "ncm_centroid_acc": 0.82,
+      "merged_n_clusters": 164,
+      "merged_hungarian_full": 0.7306666666666667,
+      "merged_hungarian_stable": 0.8589341692789969,
+      "merged_ncm_centroid_acc": 0.82
+    },
+    {
+      "pass": 3,
+      "n_created": 0,
+      "n_merges": 0,
+      "n_repeats": 750,
+      "coverage": 1.0,
+      "hungarian_full": 0.7306666666666667,
+      "hungarian_stable": 0.8589341692789969,
+      "agreement_with_prev": 1.0,
+      "n_clusters": 164,
+      "ncm_centroid_acc": 0.82,
+      "merged_n_clusters": 164,
+      "merged_hungarian_full": 0.7306666666666667,
+      "merged_hungarian_stable": 0.8589341692789969,
+      "merged_ncm_centroid_acc": 0.82
+    }
+  ],
+  "best_pass": 1,
+  "total_weighted_best_pass": 0.9272002786485545
+}

@@ -56,6 +56,36 @@ def hungarian_accuracy(true: np.ndarray, pred: np.ndarray) -> float:
     return cont[row, col].sum() / len(true)
 
 
+def greedy_merge(assigned_arr: np.ndarray, X_disc: np.ndarray,
+                 merge_cos: float, n_base: int) -> np.ndarray:
+    """Жадное слияние кластеров-новинок по косинусу центроидов (как в M7)."""
+    arr = assigned_arr.copy()
+    new_ids = sorted(set(arr[arr >= 0].tolist()) - set(range(n_base)))
+    cents = {c: X_disc[arr == c].mean(axis=0) for c in new_ids
+             if (arr == c).sum() > 0}
+    for c in list(cents):
+        cents[c] /= np.linalg.norm(cents[c]) + 1e-8
+    parent = {c: c for c in new_ids}
+
+    def find(c):
+        while parent[c] != c:
+            parent[c] = parent[parent[c]]
+            c = parent[c]
+        return c
+
+    ids = list(cents)
+    for i in range(len(ids)):
+        for j in range(i + 1, len(ids)):
+            a, b = find(ids[i]), find(ids[j])
+            if a != b and float(cents[a] @ cents[b]) > merge_cos:
+                lo, hi = min(a, b), max(a, b)
+                parent[hi] = lo
+    out = arr.copy()
+    for c in new_ids:
+        out[arr == c] = find(c)
+    return out
+
+
 def ncm_centroid_acc(X_disc: np.ndarray, y_disc: np.ndarray,
                      assigned: np.ndarray, X_ncm: np.ndarray,
                      y_ncm: np.ndarray) -> tuple[float, int]:
@@ -138,10 +168,22 @@ def main() -> None:
         acc_ncm, n_cl = ncm_centroid_acc(
             X_disc, y_disc, assigned, X_ncm, y_ncm)
 
+        # после жадного слияния мини-кластеров (лечит «расконсервацию» шума)
+        merged = greedy_merge(assigned, X_disc, merge_cos=0.85,
+                              n_base=N_BASE)
+        m_mask = merged >= 0
+        acc_m_full = hungarian_accuracy(y_disc[m_mask], merged[m_mask])
+        acc_m_stable = hungarian_accuracy(
+            y_disc[stable_rows], merged[stable_rows])
+        acc_m_ncm, n_mcl = ncm_centroid_acc(
+            X_disc, y_disc, merged, X_ncm, y_ncm)
+
         print(f"{p:>4} {info['n_created']:>7} {info['n_merges']:>6} "
               f"{info['n_repeats']:>7} {cov*100:>6.1f} {acc_full*100:>7.2f} "
               f"{acc_stable*100:>8.2f} {agree*100:>6.1f} {n_cl:>8} "
-              f"{acc_ncm*100:>7.2f}")
+              f"{acc_ncm*100:>7.2f} | merge@0.85: {n_mcl:>3} кл, "
+              f"H {acc_m_full*100:.2f}/{acc_m_stable*100:.2f}, "
+              f"NCM {acc_m_ncm*100:.2f}")
         rows_out.append({
             "pass": p,
             "n_created": info["n_created"],
@@ -153,17 +195,22 @@ def main() -> None:
             "agreement_with_prev": agree,
             "n_clusters": n_cl,
             "ncm_centroid_acc": acc_ncm,
+            "merged_n_clusters": n_mcl,
+            "merged_hungarian_full": acc_m_full,
+            "merged_hungarian_stable": acc_m_stable,
+            "merged_ncm_centroid_acc": acc_m_ncm,
         })
         prev_assigned = assigned.copy()
 
-    # 5. Итог по формуле CORAL (лучший проход по NCM)
-    best = max(rows_out, key=lambda r: r["ncm_centroid_acc"])
+    # 5. Итог по формуле CORAL (лучший проход по NCM после слияния)
+    best = max(rows_out, key=lambda r: r["merged_ncm_centroid_acc"])
     total = (stats["p_last"] * len(base["X_test"])
-             + best["hungarian_full"] * len(X_disc)) / (
+             + best["merged_hungarian_full"] * len(X_disc)) / (
         len(base["X_test"]) + len(X_disc))
     print(f"\n[total@pass{best['pass']}] база {stats['p_last']*100:.1f}% + "
-          f"открытия {best['hungarian_full']*100:.1f}% → взвешенно "
-          f"{total*100:.1f}% | NCM {best['ncm_centroid_acc']*100:.2f}%")
+          f"открытия {best['merged_hungarian_full']*100:.1f}% → взвешенно "
+          f"{total*100:.1f}% | NCM(merge) "
+          f"{best['merged_ncm_centroid_acc']*100:.2f}%")
 
     tag = CACHE.stem
     out = {
