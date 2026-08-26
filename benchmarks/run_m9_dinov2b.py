@@ -30,8 +30,10 @@ CACHE_BASE = Path(sys.argv[2]) if len(sys.argv) > 2 else \
     ROOT / "data" / "dinov2b_768.npz"
 CACHE_AUG = Path(sys.argv[3]) if len(sys.argv) > 3 else \
     ROOT / "data" / "dinov2b_768_aug4.npz"
-# опционально: кэш с альтернативным X_test (напр. TTA5), train не меняется
-TEST_OVERRIDE = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+# опционально: кэш с альтернативным X_test (напр. TTA5), train не меняется;
+# "-" или "none" = нет подмены (позволяет задать только argv[2]/argv[3])
+_override = sys.argv[1] if len(sys.argv) > 1 else ""
+TEST_OVERRIDE = Path(_override) if _override not in ("", "-", "none") else None
 PHASES = [[p * 10 + i for i in range(10)] for p in range(10)]
 
 
