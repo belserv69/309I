@@ -20,6 +20,7 @@ import torch.nn.functional as F
 MODELS = {
     "dinov2_vits14": 384,
     "dinov2_vitb14": 768,
+    "dinov2_vitl14": 1024,
     "dinov2_vits14_reg": 384,
     "dinov2_vitb14_reg": 768,
 }

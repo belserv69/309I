@@ -26,8 +26,10 @@ from zf.pipeline import run_continual
 
 ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "results"
-CACHE_BASE = ROOT / "data" / "dinov2b_768.npz"
-CACHE_AUG = ROOT / "data" / "dinov2b_768_aug4.npz"
+CACHE_BASE = Path(sys.argv[2]) if len(sys.argv) > 2 else \
+    ROOT / "data" / "dinov2b_768.npz"
+CACHE_AUG = Path(sys.argv[3]) if len(sys.argv) > 3 else \
+    ROOT / "data" / "dinov2b_768_aug4.npz"
 # опционально: кэш с альтернативным X_test (напр. TTA5), train не меняется
 TEST_OVERRIDE = Path(sys.argv[1]) if len(sys.argv) > 1 else None
 PHASES = [[p * 10 + i for i in range(10)] for p in range(10)]
@@ -112,5 +114,8 @@ if __name__ == "__main__":
     for k in (8, 16):
         results.append(pure_memory(base, k))
     results.append(hybrid(aug))
-    tag = "_tta5" if TEST_OVERRIDE else ""
-    (RESULTS / f"m9_dinov2b{tag}.json").write_text(json.dumps(results, indent=2))
+    stem = "m9_dinov2b" if CACHE_BASE.stem.startswith("dinov2b") \
+        else "m9_" + CACHE_BASE.stem.replace("_aug4", "")
+    if TEST_OVERRIDE:
+        stem += "_tta5"
+    (RESULTS / f"{stem}.json").write_text(json.dumps(results, indent=2))
