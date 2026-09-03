@@ -16,3 +16,4 @@ logs/
 # прочее
 .DS_Store
 *.egg-info/
+wheels_dl/
